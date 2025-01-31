@@ -126,9 +126,50 @@ class cloud:
     def draw(self, SCREEN):
         SCREEN.blit(self.image, (self.x, self.y))
 
+class obstacles:
+    def __init__(self, image, type):
+        self.image = image
+        self.type = type
+        self.rect = self.image[self.type].get_rect()
+        self.rect.x = SCRN_WIDTH
+
+    def update(self):
+        self.rect.x -= gamespeed
+        if self.rect.x <= -self.rect.width:
+            obstacle.pop()
+
+    def draw(self, SCREEN):
+        SCREEN.blit(self.image[self.type], self.rect)
+
+class smallcacti(obstacles):
+    def __init__(self, image):
+        self.type= random.randint(0,2)
+        super().__init__(image, self.type)
+        self.rect.y = 325
+
+class largecacti(obstacles):
+    def __init__(self, image):
+        self.type= random.randint(0,2)
+        super().__init__(image, self.type)
+        self.rect.y = 300
+
+class bird(obstacles):
+    def __init__(self, image):
+        self.type = 0
+        super().__init__(image, self.type)
+        self.rect.y = 250
+        self.index = 0
+
+    def draw(self, SCREEN):
+        if self.index >= 9:
+            self.index = 0
+
+        SCREEN.blit(self.image[self.index//5], self.rect)
+        self.index += 1
+
 
 def main():
-    global gamespeed
+    global gamespeed, xposbg, yposbg, points, obstacle
     run = True
     clock = pygame.time.Clock()
     player = Dinosaur()
@@ -136,6 +177,34 @@ def main():
     Cloud2 = cloud()
     Cloud3 = cloud()
     gamespeed = 14
+    xposbg = 0
+    yposbg = 380
+    points = 0
+    font = pygame.font.Font("freesansbold.ttf", 20)
+    obstacle = []
+
+    def score():
+        global gamespeed, points
+        points += 1
+
+        if points % 100 == 0:
+            gamespeed += 1
+
+        text = font.render("Points: " + str(points), True, (0,0,0))
+        textrect = text.get_rect()
+        textrect.center = (1000,40)
+        SCREEN.blit(text, textrect)
+
+    def background():
+        global xposbg, yposbg
+        imagewidth = BG.get_width()
+        SCREEN.blit(BG, (xposbg,yposbg))
+        SCREEN.blit(BG, (imagewidth+ xposbg,yposbg))
+        if xposbg <= -imagewidth:
+            SCREEN.blit(BG, (imagewidth +xposbg, yposbg))
+            xposbg = 0
+        xposbg -= gamespeed
+
 
     while run:
         for event in pygame.event.get():
@@ -148,6 +217,23 @@ def main():
         player.draw(SCREEN)
         player.update(usr_inpt)
         usr_inpt = False
+
+        if len(obstacle) == 0:
+            if random.randint(0,2) == 0:
+                obstacle.append(smallcacti(S_CACTUS))
+            elif random.randint(0,2) == 1:
+                obstacle.append(bird(BIRD))
+            elif random.randint(0,2) == 2:
+                obstacle.append(largecacti(L_CACTUS))
+        
+        for item in obstacle:
+            item.draw(SCREEN)
+            item.update()
+            if player.dino_rect.colliderect(item.rect):
+                pygame.draw.rect(SCREEN, (255,0,0), player.dino_rect, 2)
+
+        background()
+        score()
 
         Cloud.draw(SCREEN)
         Cloud.update(0, 50, 100)
