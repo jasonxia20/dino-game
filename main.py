@@ -169,7 +169,7 @@ class bird(obstacles):
 
 
 def main():
-    global gamespeed, xposbg, yposbg, points, obstacle
+    global gamespeed, xposbg, yposbg, points, obstacle, font
     run = True
     clock = pygame.time.Clock()
     player = Dinosaur()
@@ -182,6 +182,7 @@ def main():
     points = 0
     font = pygame.font.Font("freesansbold.ttf", 20)
     obstacle = []
+    deathcount = 0
 
     def score():
         global gamespeed, points
@@ -230,7 +231,10 @@ def main():
             item.draw(SCREEN)
             item.update()
             if player.dino_rect.colliderect(item.rect):
-                pygame.draw.rect(SCREEN, (255,0,0), player.dino_rect, 2)
+                #pygame.draw.rect(SCREEN, (255,0,0), player.dino_rect, 2)
+                pygame.time.delay(2000)
+                deathcount += 1
+                menu(deathcount)
 
         background()
         score()
@@ -246,6 +250,36 @@ def main():
 
         clock.tick(30)
         pygame.display.update()
-    
 
-main()
+#main()
+
+def menu(deathcount):
+    global points
+    run = True
+    font = pygame.font.Font("freesansbold.ttf", 20)
+    while run:
+        SCREEN.fill((255,255,255))
+        if deathcount == 0:
+            text = font.render("Press any key to start", True, (0,0,0))
+        elif deathcount > 0:
+            text = font.render("Press any key to restart", True, (0,0,0))
+            score = font.render(f"Your score: {str(points)}", True, (0,0,0))
+            scoreRect = score.get_rect()
+            scoreRect.center = (SCRN_WIDTH // 2, SCRN_HEIGHT // 2 +50)
+            SCREEN.blit(score, scoreRect)
+
+        textrect = text.get_rect()
+        textrect.center = (SCRN_WIDTH // 2, SCRN_HEIGHT // 2)
+        SCREEN.blit(text, textrect)
+        SCREEN.blit(RUNNING[0], (SCRN_WIDTH //2 -20, SCRN_HEIGHT // 2 -140))
+        pygame.display.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+
+            if event.type == pygame.KEYDOWN:
+                main()
+
+            
+menu(deathcount=0)
